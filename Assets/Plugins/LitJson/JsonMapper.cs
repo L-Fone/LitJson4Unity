@@ -232,6 +232,10 @@ namespace LitJson
 
                     if (parameters[0].ParameterType == typeof(string))
                         data.ElementType = p_info.PropertyType;
+                        
+                    //在马三的版本上魔改, 增加对int做Key字典的解析
+                    if (parameters[0].ParameterType == typeof(int))
+                        data.ElementType = p_info.PropertyType;
 
                     continue;
                 }
@@ -474,6 +478,9 @@ namespace LitJson
                 ObjectMetadata t_data = object_metadata[value_type];
 
                 instance = Activator.CreateInstance(value_type);
+                
+                //在马三的版本上魔改, 增加对int做Key字典的解析
+                bool isInKey = t_data.IsDictionary && value_type.GetGenericArguments()[0] == typeof(int);
 
                 while (true)
                 {
@@ -527,12 +534,21 @@ namespace LitJson
                                 continue;
                             }
                         }
-
-                      ((IDictionary)instance).Add(
-                          property, ReadValue(
-                              t_data.ElementType, reader));
+                        
+                        if(isInKey)
+                        {
+                          //在马三的版本上魔改, 增加对int做Key字典的解析
+                          ((IDictionary)instance).Add(
+                              Convert.ToInt32(property), ReadValue(
+                                  t_data.ElementType, reader));
+                        }
+                        else
+                        {
+                          ((IDictionary)instance).Add(
+                              property, ReadValue(
+                                  t_data.ElementType, reader));
+                        }
                     }
-
                 }
 
             }
